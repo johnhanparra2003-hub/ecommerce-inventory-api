@@ -1,0 +1,38 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: inventory-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-example}
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: inventory-api
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      MONGO_URI: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD:-example}@mongo:27017/ecommerce_inventory?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-change_me_to_a_long_random_secret_for_real_use}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
+      BCRYPT_SALT_ROUNDS: ${BCRYPT_SALT_ROUNDS:-12}
+      ADMIN_NAME: ${ADMIN_NAME:-Store Admin}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin1234}
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+volumes:
+  mongo_data:

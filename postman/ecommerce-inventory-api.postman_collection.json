@@ -1,0 +1,103 @@
+{
+  "info": {
+    "name": "E-commerce Inventory API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "token", "value": "" },
+    { "key": "productId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health check",
+          "request": { "method": "GET", "url": "{{baseUrl}}/health" }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('201 Created', () => pm.response.to.have.status(201));",
+            "pm.collectionVariables.set('token', pm.response.json().data.token);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/auth/register",
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"Secret123\"\n}" }
+          }
+        },
+        {
+          "name": "Login (admin)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200 OK', () => pm.response.to.have.status(200));",
+            "pm.collectionVariables.set('token', pm.response.json().data.token);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Admin1234\"\n}" }
+          }
+        },
+        {
+          "name": "Get my profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/v1/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Create product (admin)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('201 Created', () => pm.response.to.have.status(201));",
+            "pm.collectionVariables.set('productId', pm.response.json().data.product.id);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/api/v1/products",
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Mechanical Keyboard\",\n  \"description\": \"Hot-swappable, RGB\",\n  \"sku\": \"KB1001\",\n  \"price\": 89.99,\n  \"stock\": 25,\n  \"category\": \"peripherals\"\n}" }
+          }
+        },
+        {
+          "name": "List products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products?page=1&limit=10&sortBy=price&order=asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "products"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "sortBy", "value": "price" },
+                { "key": "order", "value": "asc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get product by ID",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/products/{{productId}}" }
+        }
+      ]
+    }
+  ]
+}
